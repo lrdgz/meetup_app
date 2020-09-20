@@ -8,13 +8,13 @@ class MeetupApiService {
   //     ? 'http://localhost:3002/api/v1'
   //     : 'http://10.0.2.2:3002/api/v1';
 
-  // final String url = Platform.isIOS
-  //     ? 'http://192.168.0.4:3002/api/v1'
-  //     : 'http://192.168.0.4:3002/api/v1';
-
   final String url = Platform.isIOS
-      ? 'http://10.0.0.12:3002/api/v1'
-      : 'http://10.0.0.12:3002/api/v1';
+      ? 'http://192.168.0.4:3002/api/v1'
+      : 'http://192.168.0.4:3002/api/v1';
+
+  // final String url = Platform.isIOS
+  //     ? 'http://10.0.0.12:3002/api/v1'
+  //     : 'http://10.0.0.12:3002/api/v1';
 
   static final MeetupApiService _singleton = MeetupApiService._internal();
 

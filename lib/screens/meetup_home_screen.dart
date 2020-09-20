@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_meetuper/models/meetup.dart';
 import 'package:flutter_meetuper/screens/meetup_details_screen.dart';
+import 'package:flutter_meetuper/services/auth_api_service.dart';
 import 'package:flutter_meetuper/services/meetup_api_service.dart';
 
 class MeetupDetailsArguments {
@@ -11,6 +12,7 @@ class MeetupDetailsArguments {
 
 class MeetupHomeScreen extends StatefulWidget {
   final MeetupApiService _api = MeetupApiService();
+  static final String route = '/meetups';
 
   @override
   _MeetupHomeScreenState createState() => _MeetupHomeScreenState();
@@ -53,16 +55,64 @@ class _MeetupHomeScreenState extends State<MeetupHomeScreen> {
 }
 
 class _MeetupTitle extends StatelessWidget {
+  final AuthApiService auth = AuthApiService();
+
+  Widget _buildUserWelcome() {
+    return FutureBuilder<bool>(
+      future: auth.isAuthenticaded(),
+      builder: (BuildContext context, AsyncSnapshot<bool> snapshot) {
+        if (snapshot.hasData && snapshot.data) {
+          final user = auth.authUser;
+          return Container(
+            margin: EdgeInsets.only(top: 10.0),
+            child: Row(
+              children: [
+                user.avatar != null
+                    ? CircleAvatar(
+                        backgroundImage: NetworkImage(user.avatar),
+                      )
+                    : Container(height: 0, width: 0),
+                Text("Welcome ${user.username}"),
+                Spacer(),
+                GestureDetector(
+                  onTap: () {
+                    auth.logout().then((isLogout) =>
+                        Navigator.pushNamedAndRemoveUntil(context, "/login",
+                            (Route<dynamic> route) => false));
+                  },
+                  child: Text(
+                    'Logout',
+                    style: TextStyle(color: Theme.of(context).primaryColor),
+                  ),
+                )
+              ],
+            ),
+          );
+        } else {
+          return Container(height: 0, width: 0);
+        }
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
       alignment: Alignment.centerLeft,
       padding: EdgeInsets.all(20.0),
-      child: Text("Featured Meetup",
-          style: TextStyle(
-            fontSize: 22.0,
-            fontWeight: FontWeight.bold,
-          )),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            "Featured Meetups",
+            style: TextStyle(
+              fontSize: 22.0,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          _buildUserWelcome(),
+        ],
+      ),
     );
   }
 }
