@@ -1,5 +1,10 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_meetuper/blocs/bloc_provider.dart';
+import 'package:flutter_meetuper/blocs/meetup_bloc.dart';
 import 'package:flutter_meetuper/models/meetup.dart';
+import 'package:flutter_meetuper/services/auth_api_service.dart';
 import 'package:flutter_meetuper/services/meetup_api_service.dart';
 import 'package:flutter_meetuper/widgets/bottom_navigation.dart';
 
@@ -15,23 +20,21 @@ class MeetupDetailsScreen extends StatefulWidget {
 }
 
 class _MeetupDetailsScreenState extends State<MeetupDetailsScreen> {
-  Meetup meetup;
   @override
-  void initState() {
-    super.initState();
-    _fetchMeetup();
-  }
-
-  _fetchMeetup() async {
-    final meetup = await widget._api.fetchMeetupById(widget.meetupId);
-    setState(() => this.meetup = meetup);
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    BlocProvider.of<MeetupBloc>(context).fetchMeetup(widget.meetupId);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: meetup != null
-          ? ListView(
+      body: StreamBuilder<Meetup>(
+        stream: BlocProvider.of<MeetupBloc>(context).meetup,
+        builder: (BuildContext context, AsyncSnapshot<Meetup> snapshot) {
+          if (snapshot.hasData) {
+            final meetup = snapshot.data;
+            return ListView(
               children: [
                 _HeaderSection(meetup),
                 _TitleSection(meetup),
@@ -44,12 +47,50 @@ class _MeetupDetailsScreenState extends State<MeetupDetailsScreen> {
                   ),
                 )
               ],
-            )
-          : Container(width: 0, height: 0),
+            );
+          } else {
+            return Container(width: 0, height: 0);
+          }
+        },
+      ),
       appBar: AppBar(
         title: Text('Meetup Data'),
       ),
       bottomNavigationBar: ButtomNavigation(),
+      floatingActionButton: _MeetupActionButton(),
+    );
+  }
+}
+
+class _MeetupActionButton extends StatelessWidget {
+  final AuthApiService _auth = AuthApiService();
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<bool>(
+      future: _auth.isAuthenticaded(),
+      builder: (BuildContext context, AsyncSnapshot<bool> snapshot) {
+        if (snapshot.hasData && snapshot.data) {
+          final isMember = true;
+          if (isMember) {
+            return FloatingActionButton(
+              onPressed: () {},
+              child: Icon(Icons.cancel, color: Colors.white),
+              backgroundColor: Colors.red,
+              tooltip: 'Leave Meetup',
+            );
+          } else {
+            return FloatingActionButton(
+              onPressed: () {},
+              child: Icon(Icons.person_add, color: Colors.white),
+              backgroundColor: Colors.green,
+              tooltip: 'Join Meetup',
+            );
+          }
+        } else {
+          return Container(width: 0, height: 0);
+        }
+      },
     );
   }
 }
